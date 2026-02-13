@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: default
+  uid: 12345678-1234-1234-1234-123456789012
+  resourceVersion: "12345"
+  creationTimestamp: "2024-01-01T00:00:00Z"
+  generation: 1
+  managedFields:
+    - manager: kubectl
+      operation: Update
+  annotations:
+    helm.sh/chart: nginx-1.0.0
+    meta.helm.sh/release-name: nginx
+    cattle.io/status: active
+  labels:
+    app: nginx
+    helm.sh/chart: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.21
+          imagePullPolicy: IfNotPresent
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      serviceAccountName: default
+status:
+  replicas: 1
+  readyReplicas: 1
