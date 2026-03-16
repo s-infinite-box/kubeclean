@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"kubeclean/cleaner"
 	"kubeclean/config"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -103,8 +104,8 @@ func run(cmd *cobra.Command, args []string) error {
 func buildOptions(cfg *config.Config) *cleaner.Options {
 	opts := &cleaner.Options{}
 
-	// --all 启用所有过滤器
-	if filterAll {
+	// --all 启用所有过滤器 如果所有过滤器都未指定，则过滤所有
+	if filterAll || (!filterMeta && !filterStatus && !filterDefaults && !filterHelm && !filterRKE) {
 		opts.Meta = true
 		opts.Status = true
 		opts.Defaults = true

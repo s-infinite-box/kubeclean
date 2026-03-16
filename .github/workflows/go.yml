@@ -1,5 +1,9 @@
 name: Go
 
+# 触发条件：
+# - push 到 main 分支时执行 build 验证
+# - push v* 格式的 tag 时（如 v1.0.0）执行 build + release
+# - 向 main 发起 PR 时执行 build 验证
 on:
   push:
     branches: ["main"]
@@ -8,7 +12,14 @@ on:
   pull_request:
     branches: ["main"]
 
+# 授予 contents 写权限，允许 workflow 创建 release 并上传产物
+# 若仍报 403，前往 Settings → Actions → General → Workflow permissions 改为 Read and write permissions
+permissions:
+  contents: write
+
 jobs:
+  # build job：验证代码可以正常编译和通过测试
+  # push main / PR / push tag 时都会执行
   build:
     runs-on: ubuntu-latest
     steps:
@@ -25,10 +36,17 @@ jobs:
       - name: Test
         run: go test -v ./...
 
+  # release job：仅在 push v* tag 时触发，依赖 build 成功后才执行
+  # 发布流程：
+  #   git tag -a v1.0.0 -m "release v1.0.0"
+  #   git push origin v1.0.0
   release:
+    # 只有 tag 以 v 开头时才执行此 job
     if: startsWith(github.ref, 'refs/tags/v')
+    # 等待 build job 成功后再执行
     needs: build
     runs-on: ubuntu-latest
+    # 矩阵策略：并行编译多平台二进制
     strategy:
       matrix:
         include:
@@ -56,9 +74,13 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           EXT=""
+          # windows 平台需要 .exe 后缀
           [ "$GOOS" = "windows" ] && EXT=".exe"
+          # -s -w 去除调试信息，减小二进制体积
           go build -ldflags="-s -w" -o kubeclean-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} .
 
+      # 自动创建 GitHub Release 并上传对应平台的二进制文件
+      # generate_release_notes: true 根据 commit 记录自动生成 release notes
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
