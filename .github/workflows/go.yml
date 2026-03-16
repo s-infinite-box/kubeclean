@@ -31,7 +31,7 @@ jobs:
           go-version: '1.23'
 
       - name: Build
-        run: go build -o kubeclean .
+        run: go build -o kc .
 
       - name: Test
         run: go test -v ./...
@@ -77,7 +77,7 @@ jobs:
           # windows 平台需要 .exe 后缀
           [ "$GOOS" = "windows" ] && EXT=".exe"
           # -s -w 去除调试信息，减小二进制体积
-          go build -ldflags="-s -w" -o kubeclean-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} .
+          go build -ldflags="-s -w" -o kc-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} .
 
       # 自动创建 GitHub Release 并上传对应平台的二进制文件
       # generate_release_notes: true 根据 commit 记录自动生成 release notes
@@ -85,4 +85,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: kubeclean-${{ matrix.goos }}-${{ matrix.goarch }}*
+          files: kc-${{ matrix.goos }}-${{ matrix.goarch }}*
