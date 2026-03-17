@@ -31,7 +31,11 @@ jobs:
           go-version: '1.23'
 
       - name: Build
-        run: go build -o kc .
+        run: |
+          VERSION=$(git describe --tags --exact-match 2>/dev/null || echo "$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)")
+          COMMIT=$(git rev-parse --short HEAD)
+          BUILD_TIME=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          go build -ldflags="-X kubeclean/cmd.Version=${VERSION} -X kubeclean/cmd.Commit=${COMMIT} -X kubeclean/cmd.BuildTime=${BUILD_TIME}" -o kc .
 
       - name: Test
         run: go test -v ./...
@@ -76,8 +80,11 @@ jobs:
           EXT=""
           # windows 平台需要 .exe 后缀
           [ "$GOOS" = "windows" ] && EXT=".exe"
+          VERSION=${{ github.ref_name }}
+          COMMIT=$(git rev-parse --short HEAD)
+          BUILD_TIME=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
           # -s -w 去除调试信息，减小二进制体积
-          go build -ldflags="-s -w" -o kc-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} .
+          go build -ldflags="-s -w -X kubeclean/cmd.Version=${VERSION} -X kubeclean/cmd.Commit=${COMMIT} -X kubeclean/cmd.BuildTime=${BUILD_TIME}" -o kc-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} .
 
       # 自动创建 GitHub Release 并上传对应平台的二进制文件
       # generate_release_notes: true 根据 commit 记录自动生成 release notes
