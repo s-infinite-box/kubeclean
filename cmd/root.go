@@ -56,9 +56,18 @@ func init() {
 	// 输入输出
 	rootCmd.Flags().StringVarP(&inputFile, "file", "f", "", "从文件读取输入")
 	rootCmd.Flags().StringVarP(&outputFormat, "output", "o", "", "输出格式: yaml/json")
+
+	// 版本
+	rootCmd.Flags().BoolP("version", "v", false, "显示版本信息")
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	// 处理 -v 版本标志
+	if v, _ := cmd.Flags().GetBool("version"); v {
+		printVersion()
+		return nil
+	}
+
 	// 1. 加载配置
 	cfg, _ := config.LoadConfig()
 
