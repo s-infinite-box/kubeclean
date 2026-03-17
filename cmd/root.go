@@ -51,7 +51,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&filterDefaults, "defaults", "d", false, "过滤 K8s 默认值")
 	rootCmd.Flags().BoolVarP(&filterHelm, "helm", "H", false, "过滤 Helm 标记")
 	rootCmd.Flags().BoolVarP(&filterRKE, "rke", "r", false, "过滤 RKE/Rancher 标记")
-	rootCmd.Flags().BoolVarP(&filterAll, "all", "A", false, "启用所有过滤器")
+	rootCmd.Flags().BoolVarP(&filterAll, "all", "A", false, "启用所有过滤器，默认选项")
 
 	// 输入输出
 	rootCmd.Flags().StringVarP(&inputFile, "file", "f", "", "从文件读取输入")
