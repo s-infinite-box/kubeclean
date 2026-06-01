@@ -8,12 +8,13 @@ import (
 
 // Options 清理选项
 type Options struct {
-	Meta     bool
-	Status   bool
-	Defaults bool
-	Helm     bool
-	RKE      bool
-	Custom   *CustomConfig
+	Meta         bool
+	Status       bool
+	Defaults     bool
+	Helm         bool
+	RKE          bool
+	DecodeSecret bool
+	Custom       *CustomConfig
 }
 
 // CustomConfig 自定义过滤配置
@@ -47,6 +48,9 @@ func Clean(resource map[string]interface{}, opts *Options) map[string]interface{
 	}
 	if opts.Custom != nil {
 		result = FilterCustom(result, opts.Custom)
+	}
+	if opts.DecodeSecret {
+		result = DecodeSecret(result)
 	}
 
 	return result

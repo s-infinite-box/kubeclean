@@ -17,6 +17,7 @@ var (
 	filterDefaults bool
 	filterHelm     bool
 	filterRKE      bool
+	filterSecret   bool
 	filterAll      bool
 
 	// 输入输出
@@ -51,6 +52,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&filterDefaults, "defaults", "d", false, "过滤 K8s 默认值")
 	rootCmd.Flags().BoolVarP(&filterHelm, "helm", "H", false, "过滤 Helm 标记")
 	rootCmd.Flags().BoolVarP(&filterRKE, "rke", "r", false, "过滤 RKE/Rancher 标记")
+	rootCmd.Flags().BoolVarP(&filterSecret, "secret", "S", false, "将 Secret data 字段从 base64 解码为 stringData")
 	rootCmd.Flags().BoolVarP(&filterAll, "all", "A", false, "启用所有过滤器，默认选项")
 
 	// 输入输出
@@ -114,12 +116,13 @@ func buildOptions(cfg *config.Config) *cleaner.Options {
 	opts := &cleaner.Options{}
 
 	// --all 启用所有过滤器 如果所有过滤器都未指定，则过滤所有
-	if filterAll || (!filterMeta && !filterStatus && !filterDefaults && !filterHelm && !filterRKE) {
+	if filterAll || (!filterMeta && !filterStatus && !filterDefaults && !filterHelm && !filterRKE && !filterSecret) {
 		opts.Meta = true
 		opts.Status = true
 		opts.Defaults = true
 		opts.Helm = true
 		opts.RKE = true
+		opts.DecodeSecret = true
 	} else {
 		// 命令行参数
 		opts.Meta = filterMeta
@@ -127,6 +130,7 @@ func buildOptions(cfg *config.Config) *cleaner.Options {
 		opts.Defaults = filterDefaults
 		opts.Helm = filterHelm
 		opts.RKE = filterRKE
+		opts.DecodeSecret = filterSecret
 
 		// 配置文件默认值（命令行未指定时生效）
 		if cfg != nil && !hasAnyFilter() {
@@ -135,6 +139,7 @@ func buildOptions(cfg *config.Config) *cleaner.Options {
 			opts.Defaults = opts.Defaults || cfg.HasDefault("defaults")
 			opts.Helm = opts.Helm || cfg.HasDefault("helm")
 			opts.RKE = opts.RKE || cfg.HasDefault("rke")
+			opts.DecodeSecret = opts.DecodeSecret || cfg.HasDefault("secret")
 		}
 	}
 
@@ -151,5 +156,5 @@ func buildOptions(cfg *config.Config) *cleaner.Options {
 
 // hasAnyFilter 检查是否指定了任何过滤标志
 func hasAnyFilter() bool {
-	return filterMeta || filterStatus || filterDefaults || filterHelm || filterRKE
+	return filterMeta || filterStatus || filterDefaults || filterHelm || filterRKE || filterSecret
 }

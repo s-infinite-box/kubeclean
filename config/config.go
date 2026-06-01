@@ -9,7 +9,7 @@ import (
 
 // Config 配置结构
 type Config struct {
-	Defaults []string     `yaml:"defaults"` // 默认启用的过滤器: meta, status, defaults, helm, rke
+	Defaults []string     `yaml:"defaults"` // 默认启用的过滤器: meta, status, defaults, helm, rke, secret
 	Custom   CustomConfig `yaml:"custom"`   // 自定义过滤规则
 }
 

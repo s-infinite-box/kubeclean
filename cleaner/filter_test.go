@@ -207,6 +207,77 @@ func TestFilterDefaults_LatestTag(t *testing.T) {
 	}
 }
 
+func TestDecodeSecret(t *testing.T) {
+	resource := map[string]interface{}{
+		"apiVersion": "v1",
+		"kind":       "Secret",
+		"metadata":   map[string]interface{}{"name": "my-secret"},
+		"type":       "Opaque",
+		"data": map[string]interface{}{
+			"username": "dXNlcm5hbWU=", // base64("username")
+			"password": "cGFzc3dvcmQ=", // base64("password")
+		},
+	}
+
+	result := DecodeSecret(resource)
+
+	// data 应该被删除
+	if _, ok := result["data"]; ok {
+		t.Error("data 字段应该被删除")
+	}
+
+	// stringData 应该包含解码后的值
+	stringData, ok := result["stringData"].(map[string]interface{})
+	if !ok {
+		t.Fatal("stringData 字段应该存在")
+	}
+	if stringData["username"] != "username" {
+		t.Errorf("username 解码错误: got %v", stringData["username"])
+	}
+	if stringData["password"] != "password" {
+		t.Errorf("password 解码错误: got %v", stringData["password"])
+	}
+}
+
+func TestDecodeSecret_NonSecret(t *testing.T) {
+	resource := map[string]interface{}{
+		"kind": "ConfigMap",
+		"data": map[string]interface{}{"key": "value"},
+	}
+
+	result := DecodeSecret(resource)
+
+	// 非 Secret 资源不应被修改
+	if _, ok := result["data"]; !ok {
+		t.Error("非 Secret 的 data 字段不应被删除")
+	}
+	if _, ok := result["stringData"]; ok {
+		t.Error("非 Secret 不应出现 stringData 字段")
+	}
+}
+
+func TestDecodeSecret_InvalidBase64(t *testing.T) {
+	resource := map[string]interface{}{
+		"kind": "Secret",
+		"data": map[string]interface{}{
+			"valid":   "dXNlcm5hbWU=",
+			"invalid": "not-valid-base64!!!",
+		},
+	}
+
+	result := DecodeSecret(resource)
+	stringData := result["stringData"].(map[string]interface{})
+
+	// 有效的解码
+	if stringData["valid"] != "username" {
+		t.Errorf("valid 解码错误: got %v", stringData["valid"])
+	}
+	// 无效 base64 保留原值
+	if stringData["invalid"] != "not-valid-base64!!!" {
+		t.Errorf("invalid 应该保留原值: got %v", stringData["invalid"])
+	}
+}
+
 func TestFilterIdempotent(t *testing.T) {
 	resource := map[string]interface{}{
 		"kind": "Pod",
